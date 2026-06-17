@@ -1,0 +1,19 @@
+:root {
+  --bg: #FAFAF8;
+  --surface: #FFFFFF;
+  --border: #E8E6DF;
+  --text: #2C2C2A;
+  --muted: #888780;
+  --easy: #3B6D11;
+  --easy-bg: #EAF3DE;
+  --mid: #185FA5;
+  --mid-bg: #E6F1FB;
+  --hard: #993556;
+  --hard-bg: #FBEAF0;
+  --person: #534AB7;
+  --person-bg: #EEEDFE;
+  --gold: #BA7517;
+  --gold-bg: #FAEEDA;
+  --radius: 12px;
+  --radius-sm: 8px;
+}

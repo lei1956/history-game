@@ -1,0 +1,12 @@
+[
+  { "id": "first_blood", "icon": "⚡", "name": "初战告捷", "desc": "完成第一局游戏", "pts": 50 },
+  { "id": "perfect", "icon": "💎", "name": "完美无缺", "desc": "单局全部答对", "pts": 200 },
+  { "id": "streak3", "icon": "🔥", "name": "连胜三题", "desc": "单局连续答对3题", "pts": 100 },
+  { "id": "streak5", "icon": "🌟", "name": "连胜五题", "desc": "单局连续答对5题", "pts": 150 },
+  { "id": "hard_winner", "icon": "⚔️", "name": "史学大家", "desc": "困难模式正确率达80%", "pts": 300 },
+  { "id": "person_winner", "icon": "🎯", "name": "识人如炬", "desc": "人物模式正确率达80%", "pts": 300 },
+  { "id": "score500", "icon": "🏆", "name": "积分达人", "desc": "累计积分超过500", "pts": 100 },
+  { "id": "score2000", "icon": "👑", "name": "史战天下", "desc": "累计积分超过2000", "pts": 300 },
+  { "id": "played10", "icon": "📚", "name": "勤学苦练", "desc": "累计答题超过50道", "pts": 150 },
+  { "id": "all_modes", "icon": "🌈", "name": "遍尝百味", "desc": "四种模式都至少玩过一局", "pts": 200 }
+]

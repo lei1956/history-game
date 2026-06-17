@@ -1,0 +1,32 @@
+{
+  "questionsPerGame": 10,
+  "points": {
+    "easy": 10,
+    "mid": 20,
+    "hard": 35,
+    "person": 25
+  },
+  "streakBonus": {
+    "minStreak": 3,
+    "bonusRatio": 0.5
+  },
+  "resultThresholds": {
+    "excellent": 90,
+    "good": 70,
+    "pass": 50
+  },
+  "audio": {
+    "bgmVolume": 0.3,
+    "sfxVolume": 0.5,
+    "bgmLoop": false
+  },
+  "bgmList": [
+    { "file": "bgm/bgm1.mp3", "name": "背景音乐 1" },
+    { "file": "bgm/bgm2.mp3", "name": "背景音乐 2" }
+  ],
+  "sfx": {
+    "correct": "sfx/correct.mp3",
+    "wrong": "sfx/wrong.mp3",
+    "achievement": "sfx/achievement.mp3"
+  }
+}
