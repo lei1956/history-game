@@ -4,52 +4,428 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>史战天下 — 历史学习游戏</title>
-<link rel="stylesheet" href="css/theme.css">
-<link rel="stylesheet" href="css/style.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FAFAF8;
+    --surface: #FFFFFF;
+    --border: #E8E6DF;
+    --text: #2C2C2A;
+    --muted: #888780;
+    --easy: #3B6D11;
+    --easy-bg: #EAF3DE;
+    --mid: #185FA5;
+    --mid-bg: #E6F1FB;
+    --hard: #993556;
+    --hard-bg: #FBEAF0;
+    --person: #534AB7;
+    --person-bg: #EEEDFE;
+    --gold: #BA7517;
+    --gold-bg: #FAEEDA;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  #home {
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 24px;
+    gap: 32px;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+  .logo-area { text-align: center; }
+  .logo-title {
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    color: var(--text);
+  }
+  .logo-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+  .logo-icon {
+    font-size: 56px;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .stat-card {
+    flex: 1;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-num { font-size: 24px; font-weight: 500; color: var(--text); }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .home-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .btn-play {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    letter-spacing: 2px;
+    font-family: inherit;
+  }
+  .btn-play:active { opacity: 0.75; }
+
+  .btn-easy { background: var(--easy-bg); color: var(--easy); }
+  .btn-mid  { background: var(--mid-bg);  color: var(--mid); }
+  .btn-hard { background: var(--hard-bg); color: var(--hard); }
+  .btn-person { background: var(--person-bg); color: var(--person); }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 12px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    color: var(--muted);
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .btn-secondary:active { background: var(--border); }
+
+  #game {
+    padding: 0;
+    background: var(--bg);
+  }
+
+  .game-header {
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .game-header-left { display: flex; align-items: center; gap: 10px; }
+  .back-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--muted);
+  }
+  .difficulty-tag {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+  .tag-easy { background: var(--easy-bg); color: var(--easy); }
+  .tag-mid  { background: var(--mid-bg);  color: var(--mid); }
+  .tag-hard { background: var(--hard-bg); color: var(--hard); }
+  .tag-person { background: var(--person-bg); color: var(--person); }
+
+  .progress-wrap {
+    flex: 1;
+    margin: 0 16px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--mid);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+  .q-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+  .game-body { padding: 24px 20px 40px; flex: 1; max-width: 640px; margin: 0 auto; width: 100%; }
+
+  .score-live {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .score-pts { font-size: 18px; font-weight: 500; color: var(--gold); }
+
+  .question-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    margin-bottom: 20px;
+  }
+  .q-num { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .q-text { font-size: 16px; line-height: 1.7; font-weight: 500; }
+  .clue-list { margin-top: 12px; }
+  .clue-item {
+    font-size: 14px;
+    color: var(--text);
+    padding: 8px 0;
+    border-bottom: 0.5px solid var(--border);
+    line-height: 1.6;
+  }
+  .clue-item:last-child { border-bottom: none; }
+  .clue-label { font-weight: 500; color: var(--person); margin-right: 6px; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt-btn {
+    width: 100%;
+    padding: 14px 16px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.5;
+    transition: background 0.12s, border-color 0.12s;
+    color: var(--text);
+  }
+  .opt-btn:active { opacity: 0.8; }
+  .opt-btn.correct {
+    background: var(--easy-bg);
+    border-color: var(--easy);
+    color: var(--easy);
+  }
+  .opt-btn.wrong {
+    background: #FCEBEB;
+    border-color: #A32D2D;
+    color: #A32D2D;
+  }
+  .opt-btn.reveal {
+    background: var(--easy-bg);
+    border-color: var(--easy);
+    color: var(--easy);
+    opacity: 0.7;
+  }
+  .opt-btn:disabled { cursor: default; }
+  .opt-label { font-weight: 500; margin-right: 8px; }
+
+  .answer-input-wrap {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .answer-input {
+    flex: 1;
+    padding: 14px 16px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+  }
+  .answer-input:focus { outline: none; border-color: var(--person); }
+  .submit-btn {
+    padding: 14px 20px;
+    background: var(--person);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .submit-btn:active { opacity: 0.8; }
+  .submit-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .feedback-box {
+    background: var(--gold-bg);
+    border: 0.5px solid var(--gold);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #633806;
+    margin-top: 16px;
+    line-height: 1.7;
+    display: none;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-title { font-weight: 500; margin-bottom: 4px; }
+
+  .next-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 16px;
+    display: none;
+    letter-spacing: 1px;
+    transition: opacity 0.15s;
+  }
+  .next-btn:active { opacity: 0.75; }
+  .next-btn.show { display: block; }
+
+  #result {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    gap: 24px;
+  }
+  .result-icon { font-size: 64px; text-align: center; }
+  .result-title { font-size: 24px; font-weight: 500; text-align: center; }
+  .result-sub { font-size: 14px; color: var(--muted); text-align: center; }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .result-stat {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    text-align: center;
+  }
+  .result-stat .num { font-size: 28px; font-weight: 500; }
+  .result-stat .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .achievements-earned {
+    width: 100%;
+    max-width: 360px;
+  }
+  .ach-title { font-size: 13px; color: var(--muted); margin-bottom: 10px; font-weight: 500; }
+  .ach-list { display: flex; flex-direction: column; gap: 8px; }
+  .ach-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--gold-bg);
+    border: 0.5px solid var(--gold);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+  }
+  .ach-icon { font-size: 24px; }
+  .ach-name { font-size: 13px; font-weight: 500; color: #633806; }
+  .ach-desc { font-size: 11px; color: var(--gold); margin-top: 1px; }
+
+  .result-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  #achievements {
+    padding: 0;
+    flex-direction: column;
+  }
+  .page-header {
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+  }
+  .page-title { font-size: 16px; font-weight: 500; }
+
+  .ach-page-body { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .ach-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .ach-card.locked { opacity: 0.4; }
+  .ach-card-icon { font-size: 32px; width: 48px; text-align: center; flex-shrink: 0; }
+  .ach-card-info { flex: 1; }
+  .ach-card-name { font-size: 14px; font-weight: 500; }
+  .ach-card-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .ach-card-pts { font-size: 12px; color: var(--gold); font-weight: 500; margin-top: 4px; }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .animate-in { animation: slideUp 0.25s ease; }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  .pop { animation: pop 0.2s ease; }
+
+</style>
 </head>
 <body>
 
-<!-- 加载遮罩 -->
-<div class="loading-wrap" id="loading-wrap">
-  <div class="loading-spinner"></div>
-  <div class="loading-text" id="loading-text">正在加载资源…</div>
-</div>
-
-<!-- 设置面板 -->
-<div class="settings-overlay" id="settings-overlay" onclick="if(event.target===this)closeSettings()">
-  <div class="settings-panel">
-    <div class="settings-header">
-      <div class="settings-title">⚙️ 设置</div>
-      <button class="settings-close" onclick="closeSettings()">✕</button>
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">背景音乐<br><small>开启/关闭</small></div>
-      <div class="toggle" id="set-bgm-toggle"></div>
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">音乐音量</div>
-      <input type="range" id="set-bgm-vol" min="0" max="1" step="0.05">
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">选择曲目</div>
-      <select class="settings-select" id="set-bgm-select"></select>
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">音效<br><small>答对/答错提示音</small></div>
-      <div class="toggle" id="set-sfx-toggle"></div>
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">音效音量</div>
-      <input type="range" id="set-sfx-vol" min="0" max="1" step="0.05">
-    </div>
-  </div>
-</div>
-
-<!-- 首页 -->
 <div id="home" class="screen active">
-  <button class="settings-btn" onclick="openSettings()">⚙️</button>
-
   <div class="logo-area">
+    <span class="logo-icon">⚔️</span>
     <div class="logo-title">史战天下</div>
     <div class="logo-sub">高中历史 · 闯关挑战</div>
   </div>
@@ -82,7 +458,6 @@
   </div>
 </div>
 
-<!-- 游戏页 -->
 <div id="game" class="screen">
   <div class="game-header">
     <div class="game-header-left">
@@ -123,7 +498,6 @@
   </div>
 </div>
 
-<!-- 结果页 -->
 <div id="result" class="screen">
   <div class="result-icon" id="result-icon">🏆</div>
   <div class="result-title" id="result-title">挑战完成！</div>
@@ -159,7 +533,6 @@
   </div>
 </div>
 
-<!-- 成就页 -->
 <div id="achievements" class="screen">
   <div class="page-header">
     <button class="back-btn" onclick="showScreen('home')" style="font-size:18px;color:var(--muted);background:none;border:none;cursor:pointer;">←</button>
@@ -168,6 +541,399 @@
   <div class="ach-page-body" id="ach-page-body"></div>
 </div>
 
-<script src="js/game.js"></script>
+<script>
+const QUESTIONS = {
+  easy: [
+    { q: "「破釜沉舟」这个成语来自哪场战役？", opts: ["长平之战", "巨鹿之战", "赤壁之战", "官渡之战"], ans: 1, tip: "公元前207年，项羽率军渡漳水后，命令士兵击破锅釜，凿沉船只，以示背水一战的决心，最终以少胜多大败秦军。" },
+    { q: "秦始皇统一六国后，推行的统一货币是哪种？", opts: ["刀币", "布币", "圆形方孔钱", "蚁鼻钱"], ans: 2, tip: "秦统一后将货币统一为圆形方孔铜钱（秦半两），方孔象征地，圆形象征天，此后这一形制延续了约两千年。" },
+    { q: "「纸上谈兵」这个成语讲的是哪位历史人物？", opts: ["廉颇", "赵括", "白起", "蒙恬"], ans: 1, tip: "赵括熟读兵书却缺乏实战经验，长平之战中代替廉颇出战，被白起击败，赵军四十万将士被坑杀。" },
+    { q: "汉武帝派张骞出使西域的主要目的是什么？", opts: ["开拓贸易路线", "联合大月氏夹击匈奴", "传播汉族文化", "寻访长生不老药"], ans: 1, tip: "汉武帝派张骞出使西域（公元前138年），目的是联合大月氏共同对付匈奴。虽然军事目的未完全实现，但开辟了著名的丝绸之路。" },
+    { q: "「三顾茅庐」中，刘备三次拜访的是哪位谋士？", opts: ["庞统", "司马懿", "诸葛亮", "荀彧"], ans: 2, tip: "公元207年前后，刘备三次前往隆中（今湖北襄阳）拜访诸葛亮，终于得到他的辅佐。诸葛亮提出了著名的《隆中对》战略。" },
+    { q: "「贞观之治」是哪位皇帝在位时期的盛世？", opts: ["唐太宗", "唐高宗", "武则天", "唐玄宗"], ans: 0, tip: "贞观之治（627—649年）是唐太宗李世民统治时期，以轻徭薄赋、广开言路、任用贤才著称，是中国古代著名的治世之一。" },
+    { q: "中国历史上唯一的女皇帝是谁？", opts: ["吕雉", "武则天", "慈禧太后", "上官婉儿"], ans: 1, tip: "武则天（624—705年），690年称帝，建立武周，是中国历史上正式登基称帝的唯一女性皇帝，在位期间重视科举，选拔人才。" },
+    { q: "「四大发明」不包括以下哪项？", opts: ["造纸术", "印刷术", "天文望远镜", "火药"], ans: 2, tip: "中国古代四大发明是造纸术、印刷术、火药、指南针，天文望远镜是17世纪伽利略等欧洲科学家发明并改进的。" },
+    { q: "「烽火戏诸侯」的故事与哪位周朝天子有关？", opts: ["周武王", "周厉王", "周幽王", "周平王"], ans: 2, tip: "周幽王为博褒姒一笑，多次点燃烽火欺骗诸侯。后犬戎真正入侵时，诸侯不再来援，西周就此灭亡（公元前771年）。" },
+    { q: "以下哪个朝代最先建立科举制度？", opts: ["汉朝", "魏晋", "隋朝", "唐朝"], ans: 2, tip: "科举制度由隋文帝杨坚于公元587年创立，隋炀帝时设进士科加以完善，此后历经唐宋元明清各朝，延续约1300年。" },
+    { q: "都江堰水利工程是由谁主持修建的？", opts: ["李冰", "郑国", "史禄", "西门豹"], ans: 0, tip: "公元前256年左右，秦国蜀郡太守李冰父子主持修建了都江堰，使成都平原成为\"天府之国\"，至今仍在发挥作用。" },
+    { q: "「罢黜百家，独尊儒术」是谁向汉武帝提出的？", opts: ["董仲舒", "叔孙通", "贾谊", "晁错"], ans: 0, tip: "董仲舒在《举贤良对策》中向汉武帝提出\"罢黜百家，独尊儒术\"的建议，被采纳后儒家思想成为此后两千多年中国封建社会的正统思想。" },
+    { q: "「鞠躬尽瘁，死而后已」说的是哪位三国人物？", opts: ["关羽", "张飞", "诸葛亮", "姜维"], ans: 2, tip: "此语出自诸葛亮《出师表》：\"臣鞠躬尽瘁，死而后已。\"诸葛亮为蜀汉事业殚精竭虑，最终病逝于五丈原。" },
+    { q: "郑成功收复了哪个地方？", opts: ["香港", "澳门", "台湾", "海南岛"], ans: 2, tip: "1662年，郑成功从荷兰殖民者手中收复台湾，这是中国人民反抗外来侵略的一次重大胜利。" },
+    { q: "第一次鸦片战争爆发于哪一年？", opts: ["1839年", "1840年", "1841年", "1842年"], ans: 1, tip: "1840年，英国以林则徐虎门销烟为借口，发动了第一次鸦片战争，是中国近代史的开端。" },
+    { q: "「扶清灭洋」是哪个运动的口号？", opts: ["太平天国运动", "义和团运动", "洋务运动", "维新变法"], ans: 1, tip: "义和团运动（1899—1901年）以\"扶清灭洋\"为口号，反映了当时民众反抗帝国主义侵略的爱国情绪，但也带有盲目排外的局限性。" },
+    { q: "孙中山提出的革命纲领是什么？", opts: ["三民主义", "共产主义", "民主主义", "自由主义"], ans: 0, tip: "孙中山提出了民族、民权、民生三大主义，即\"三民主义\"，是辛亥革命的指导思想。" },
+    { q: "中国工农红军长征的起点是哪里？", opts: ["井冈山", "瑞金", "遵义", "延安"], ans: 1, tip: "1934年10月，中央红军从江西瑞金等地出发，开始长征，历时两年，行程二万五千里，最终到达陕北。" },
+    { q: "《史记》的作者是谁？", opts: ["班固", "司马光", "司马迁", "左丘明"], ans: 2, tip: "司马迁（约公元前145—约前86年），西汉史学家，著有中国第一部纪传体通史《史记》，被鲁迅誉为\"史家之绝唱，无韵之离骚\"。" },
+    { q: "中国近代第一位留美学生是谁？", opts: ["詹天佑", "容闳", "严复", "梁启超"], ans: 1, tip: "容闳（1828—1912年）是中国近代第一位留美学生，1854年毕业于耶鲁大学，回国后致力于推动幼童赴美留学计划。" }
+  ],
+  mid: [
+    { q: "商鞅变法的核心内容是什么？", opts: ["废除贵族世袭特权，按军功授爵", "推行井田制，均分土地", "废除死刑，施行仁政", "推广儒学，以礼治国"], ans: 0, tip: "商鞅变法（公元前356年起）废除了贵族世袭制度，规定按军功赐予爵位和土地，大大激发了秦国士兵的战斗意志，为统一六国奠定了基础。" },
+    { q: "以下哪场战役标志着三国鼎立局面开始形成？", opts: ["长平之战", "赤壁之战", "官渡之战", "夷陵之战"], ans: 1, tip: "公元208年的赤壁之战，孙刘联军以少胜多大败曹操，阻止了曹操统一天下的步伐，此后形成魏、蜀、吴三分天下的格局。" },
+    { q: "唐朝安史之乱的起因是什么？", opts: ["宦官专权，皇帝昏庸", "节度使势力过大，安禄山与史思明叛乱", "外戚干政，朝政腐败", "农民起义，官逼民反"], ans: 1, tip: "755年，身兼三镇节度使的安禄山与史思明以\"清君侧\"为名起兵叛乱，史称安史之乱（755—763年），是唐朝由盛转衰的转折点。" },
+    { q: "王安石变法的主要目的是什么？", opts: ["加强皇权，削弱相权", "富国强兵，解决财政危机", "推行儒学，整顿礼制", "对外扩张，收复失地"], ans: 1, tip: "北宋神宗时期（1069年起），王安石推行新法，包括青苗法、募役法等，目的是增加国家财政收入、减轻百姓负担并增强军事力量。" },
+    { q: "郑和七下西洋的主要目的是什么？", opts: ["寻找建文帝下落，宣扬大明国威", "开拓海上贸易，掠夺财富", "传播佛教，进行文化交流", "探索新大陆，扩大领土"], ans: 0, tip: "郑和下西洋（1405—1433年）主要是为了宣扬明朝国威、寻找流亡的建文帝，同时进行朝贡贸易，不以营利为目的，与欧洲的大航海有本质区别。" },
+    { q: "鸦片战争后，清政府与英国签订的第一个不平等条约是？", opts: ["《南京条约》", "《北京条约》", "《马关条约》", "《天津条约》"], ans: 0, tip: "1842年签订的《南京条约》是中国近代史上第一个不平等条约，中国割让香港岛、开放五口通商、赔款2100万银元，严重损害了中国主权。" },
+    { q: "「戊戌变法」的失败主要是因为什么？", opts: ["变法内容太激进，百姓反对", "以慈禧太后为首的守旧势力强烈阻挠", "光绪帝能力不足，执行不力", "列强干涉，阻止中国变革"], ans: 1, tip: "1898年的戊戌变法历时仅103天即告失败，根本原因是以慈禧为代表的顽固守旧势力的反对，光绪帝被软禁，谭嗣同等\"戊戌六君子\"被杀。" },
+    { q: "辛亥革命推翻了哪个政权？", opts: ["北洋军阀政府", "清朝封建帝制", "袁世凯帝制", "北京政府"], ans: 1, tip: "1911年辛亥革命推翻了清朝统治，结束了中国长达两千余年的封建帝制，建立了中华民国，孙中山就任临时大总统。" },
+    { q: "五四运动爆发的直接导火索是什么？", opts: ["俄国十月革命胜利", "巴黎和会中国外交失败", "袁世凯签订\"二十一条\"", "军阀混战，民不聊生"], ans: 1, tip: "1919年巴黎和会上，列强将德国在山东的权益转交日本，消息传到国内，激起民众强烈愤慨，引发了以学生为主体的五四爱国运动。" },
+    { q: "北宋时期，指南针主要应用于哪个领域？", opts: ["军事作战", "勘测地形", "航海导航", "建筑风水"], ans: 2, tip: "宋代指南针技术日趋成熟，北宋时期开始广泛用于航海，极大地推动了海上贸易的发展，后经阿拉伯人传入欧洲，为欧洲大航海时代奠定了基础。" },
+    { q: "汉武帝推行「推恩令」的根本目的是？", opts: ["鼓励诸侯王多生子女", "削弱诸侯王势力，加强中央集权", "提高皇族社会地位", "推广儒家孝道思想"], ans: 1, tip: "推恩令允许诸侯王将封地分封给所有子嗣而非仅嫡长子，使诸侯国越分越小，无力与中央对抗，是汉武帝加强中央集权的重要措施。" },
+    { q: "魏晋南北朝时期的选官制度主要是？", opts: ["科举制", "察举制", "九品中正制", "军功爵制"], ans: 2, tip: "九品中正制由曹魏创立，将人才分为上上至下下九品，由中正官评定。但后期门阀士族垄断了中正官职位，导致\"上品无寒门，下品无士族\"的局面。" },
+    { q: "唐朝均田制瓦解的直接原因是什么？", opts: ["土地兼并严重", "政府财政困难", "农民起义频繁", "外族入侵破坏"], ans: 0, tip: "唐朝中后期，土地兼并日益严重，大量土地集中到贵族和官僚手中，均田制无法维持，农民失去土地，成为租佃农民或流民。" },
+    { q: "「杯酒释兵权」是谁实施的？", opts: ["宋太祖赵匡胤", "宋太宗赵光义", "宋仁宗", "宋神宗"], ans: 0, tip: "960年宋朝建立后，宋太祖赵匡胤通过宴请高级将领，劝其交出兵权，以和平方式解除了功臣的兵权，防止了藩镇割据局面的重演。" },
+    { q: "元朝行省制度的建立者是谁？", opts: ["成吉思汗", "窝阔台", "忽必烈", "元顺帝"], ans: 2, tip: "元世祖忽必烈建立元朝后，在地方设立行中书省（简称行省），是中国省制行政区的开端，对后世行政区划影响深远。" },
+    { q: "明朝内阁制度正式确立于哪位皇帝时期？", opts: ["明太祖朱元璋", "明成祖朱棣", "明宣宗", "明英宗"], ans: 1, tip: "明成祖朱棣时期（1402年后）正式设立内阁，由翰林院官员入值文渊阁，参与机密事务，内阁大学士逐渐拥有\"票拟\"权，成为事实上的宰相。" },
+    { q: "清朝军机处设立于哪个皇帝时期？", opts: ["康熙", "雍正", "乾隆", "嘉庆"], ans: 1, tip: "雍正七年（1729年），为处理西北军务，雍正帝设立军机房，后改称军机处。军机大臣跪受笔录，完全听命于皇帝，标志着君主专制达到顶峰。" },
+    { q: "《资政新篇》的作者是谁？", opts: ["洪秀全", "杨秀清", "石达开", "洪仁玕"], ans: 3, tip: "洪仁玕是洪秀全的族弟，1859年提出《资政新篇》，主张学习西方资本主义，发展工商业，是太平天国后期的重要文献，具有资本主义色彩。" },
+    { q: "中国第一条自建铁路是哪条？", opts: ["京张铁路", "唐胥铁路", "吴淞铁路", "卢汉铁路"], ans: 0, tip: "京张铁路（1905—1909年）由詹天佑主持设计和修建，是中国第一条不使用外国资金、由中国人自行设计建造的铁路，创造性采用了\"人\"字形线路。" },
+    { q: "辛亥革命后，清帝退位是在哪一年？", opts: ["1911年", "1912年", "1913年", "1915年"], ans: 1, tip: "1912年2月12日，隆裕太后代宣统帝溥仪颁布退位诏书，清朝正式灭亡。退位诏书中写道：\"将统治权公诸全国，定为共和立宪国体\"。" }
+  ],
+  hard: [
+    { q: "秦朝推行郡县制取代分封制，其根本意义在于？", opts: ["有效节约国家行政开支", "打破贵族世袭，加强中央集权，有利于国家统一", "便于对少数民族地区实施有效管理", "抑制地方豪强，防止农民起义"], ans: 1, tip: "郡县制的根本意义在于：地方长官由皇帝任命而非世袭，直接对中央负责，从制度上解决了西周以来封建割据的问题，是中央集权体制确立的重要标志。" },
+    { q: "从经济史角度看，宋代商品经济高度发展的原因不包括？", opts: ["打破了坊市制度的时空限制", "政府重农抑商政策有所松弛", "海外贸易发达，市舶司收入丰厚", "土地兼并严重，自耕农大量破产转为商人"], ans: 3, tip: "宋代商品经济繁荣的主要原因包括：打破坊市制度（坊市不再严格分离）、政府对商业的管制有所放松、海外贸易空前发展等。土地兼并导致农民破产，更多流为流民而非转为商人，不是主要原因。" },
+    { q: "明朝「海禁政策」的实质目的最可能是？", opts: ["防止倭寇侵扰沿海百姓", "保护国内手工业发展不受竞争", "维护朝贡体制，控制对外贸易以巩固皇权", "防止白银大量外流，保持货币稳定"], ans: 2, tip: "明朝海禁的实质目的是维护以皇帝为中心的朝贡贸易体系——只允许藩属国在特定条件下入贡贸易，从而彰显天朝权威，控制外交和贸易主导权，并非单纯的经济或安全考量。" },
+    { q: "洋务运动最终失败的根本原因是？", opts: ["洋务派官员贪污腐败，军备废弛", "西方列强阻挠中国工业化进程", "只学习西方技术，不变革封建制度", "缺乏先进技术人才和资金支持"], ans: 2, tip: "洋务运动（1861—1895年）失败的根本原因在于：洋务派坚持\"中学为体，西学为用\"，只引进西方技术而拒绝政治制度变革，在腐朽的封建制度基础上嫁接先进技术，甲午战争的惨败证明这条路行不通。" },
+    { q: "新文化运动与五四运动的关系，以下说法最准确的是？", opts: ["新文化运动由五四运动引发，是其直接结果", "两者没有关联，属于不同性质的历史事件", "新文化运动为五四运动奠定了思想基础，五四运动后新文化运动转向传播马克思主义", "五四运动是新文化运动的高潮，标志着新文化运动的结束"], ans: 2, tip: "新文化运动（1915年起）批判封建礼教、宣扬民主科学，为五四运动奠定了思想基础；五四运动（1919年）后，马克思主义在中国广泛传播，新文化运动的主流转向马克思主义，最终推动了中国共产党的成立。" },
+    { q: "关于「重农抑商」政策在中国历史上长期存在的根本原因，以下哪项分析最深刻？", opts: ["农业是封建经济的基础，商业发展威胁封建统治", "历代统治者都没有认识到商业的重要性", "中国土地广阔，农业生产率较高，自然经济长期占主导", "商人群体道德低下，不事生产，历代都受到鄙视"], ans: 0, tip: "重农抑商政策的根本原因在于：封建国家财税依赖农业，商业发展容易积累私人财富和独立势力，动摇封建等级秩序；同时商品经济的发展会冲击以土地为核心的封建经济基础，因此统治阶级从自身利益出发持续推行这一政策。" },
+    { q: "太平天国运动最终失败的根本原因是？", opts: ["军事实力不足，武器装备落后", "天京事变导致内部分裂，元气大伤", "农民阶级的局限性，缺乏科学的革命纲领和正确领导", "遭到中外反动势力（清军+洋枪队）联合镇压"], ans: 2, tip: "太平天国（1851—1864年）失败的根本原因是农民阶级的历史局限性：提不出切实可行的革命纲领，领导层腐化堕落（天京事变），无法建立稳固的政权。中外联合镇压是外部原因，内部腐化才是根本。" },
+    { q: "以下对「中体西用」思想的评价，哪项最为全面客观？", opts: ["是先进思想，积极推动了中国近代化进程", "是落后思想，阻碍了中国政治体制改革", "有一定进步意义，但存在根本性局限，无法实现真正的近代化", "在当时历史条件下是唯一可行的方案"], ans: 2, tip: "\"中体西用\"在当时有一定进步意义——推动了工业化和军事现代化，但其根本局限在于：把封建制度视为不可动摇的\"体\"，只愿引进技术而拒绝政治变革，历史证明这种嫁接是失败的，无法实现真正的国家近代化。" },
+    { q: "以下哪项最能说明中国古代「专制主义中央集权」制度的本质矛盾？", opts: ["皇权与相权的矛盾", "中央集权与地方分权的矛盾", "皇权专制与官僚体制效率之间的矛盾", "农民阶级与地主阶级的矛盾"], ans: 1, tip: "专制主义中央集权制度的核心矛盾是：皇帝需要通过官僚体制来统治广大地域，但地方势力又天然倾向于扩大自主权；如何在维持有效统治的同时防止地方割据，是历朝历代面临的根本性政治难题。" },
+    { q: "甲午战争失败对中国历史进程最深远的影响是什么？", opts: ["引发了列强瓜分中国的狂潮，民族危机空前加深", "促使先进中国人开始探索制度变革，推动了维新变法和革命运动的兴起", "彻底暴露了洋务运动的失败，宣告「师夷长技」道路的破产", "造成大量赔款，严重削弱了清朝的经济实力"], ans: 1, tip: "甲午战争（1894—1895年）惨败的最深远影响在于：打破了中国人对\"自强运动\"的幻想，促使先进知识分子认识到仅靠技术改良不够，必须进行政治制度改革，由此推动了戊戌变法、辛亥革命等一系列政治变革运动的兴起，加速了近代中国的历史进程。" },
+    { q: "西周分封制的本质目的是？", opts: ["奖励功臣，笼络人心", "拱卫王室，巩固周朝统治", "发展地方经济，促进贸易", "传播周文化，同化异族"], ans: 1, tip: "分封制的本质目的是通过分封同姓子弟和功臣到各地建立诸侯国，以血缘和宗法关系为纽带，形成\"封建亲戚，以藩屏周\"的统治网络，从而巩固周王室的统治。" },
+    { q: "汉代「察举制」的主要弊端是？", opts: ["选拔标准过于严格，人才匮乏", "举荐权被门阀士族垄断，举孝廉成形式", "考试科目单一，缺乏全面考察", "选拔周期太长，效率低下"], ans: 1, tip: "察举制最初以\"孝廉\"\"秀才\"为标准选拔人才，但后期举荐权逐渐被世家大族垄断，出现\"举秀才，不知书；举孝廉，父别居\"的现象，门阀士族通过互相举荐维护自身特权。" },
+    { q: "均田制与租庸调制的关系是？", opts: ["两者毫无关联，属于不同制度", "均田制是土地分配制度，租庸调制是建立在均田制基础上的赋税制度", "租庸调制是均田制的替代品", "均田制是租庸调制的附加制度"], ans: 1, tip: "均田制是国家按人口分配土地的制度，租庸调制是按均田制下授田数量征收的赋税制度（租为粮食、庸为劳役、调为布帛）。均田制是租庸调制的基础，均田制瓦解后，租庸调制也无法维持。" },
+    { q: "宋代「市舶司」的主要职能是？", opts: ["管理国内商业贸易", "管理海外贸易，征收关税", "监督农业生产", "管理货币发行"], ans: 1, tip: "市舶司是宋朝管理海外贸易的官方机构，设于广州、泉州、明州等主要港口，负责征收关税、管理外国商人、发放出海许可证等。市舶司收入是宋朝财政收入的重要来源。" },
+    { q: "明代「一条鞭法」改革的意义是？", opts: ["废除土地私有制，实行土地国有", "简化赋役征收，人身依附关系减弱", "推行自由贸易，取消商业限制", "建立现代银行体系，发行纸币"], ans: 1, tip: "张居正推行的一条鞭法（1581年）将赋税和徭役合并为银两征收，简化了税制，农民可以用银两代替亲身服役，减轻了国家对农民的人身控制，促进了商品经济发展。" },
+    { q: "清朝「摊丁入亩」改革的影响是？", opts: ["废除土地税，减轻农民负担", "废除人头税，人口激增", "推行自由贸易，促进商业发展", "建立议会制度，实行君主立宪"], ans: 1, tip: "雍正帝推行摊丁入亩（1723年起），将原来按人头征收的丁银摊入田赋中，按土地面积征收，实际上废除了人头税。此后人口不再因避税而隐瞒，中国人口从清初的数千万迅速增长到道光时期的四亿。" },
+    { q: "洋务派与维新派的根本分歧在于？", opts: ["是否学习西方技术", "是否变革政治制度", "是否发展工商业", "是否改革教育"], ans: 1, tip: "洋务派主张\"中体西用\"，只学习西方技术而保留封建制度；维新派主张在保留君主的前提下进行政治制度改革，实行君主立宪。两者的根本分歧在于是否触及封建政治制度本身。" },
+    { q: "义和团运动的双重性质是？", opts: ["完全反帝爱国，没有任何局限", "完全愚昧落后，应该全盘否定", "反帝爱国但盲目排外，带有封建迷信色彩", "纯粹反清复明，与帝国主义无关"], ans: 2, tip: "义和团运动具有双重性质：一方面体现了中国人民反抗帝国主义侵略的爱国精神，沉重打击了列强瓜分中国的野心；另一方面其\"扶清灭洋\"口号反映了对清政府的盲目信任，且带有封建迷信和盲目排外的局限。" },
+    { q: "辛亥革命的历史局限性是？", opts: ["没有推翻清朝统治", "没有建立共和制度", "没有完成反帝反封建的革命任务", "没有实行土地改革"], ans: 2, tip: "辛亥革命虽然推翻了清朝统治，建立了中华民国，但革命成果很快被袁世凯窃取，帝国主义在华特权没有被废除，封建土地制度没有被改变，中国人民依然处于半殖民地半封建社会的压迫之下。" },
+    { q: "新文化运动的主要阵地是？", opts: ["《申报》", "《新民丛报》", "《新青年》", "《每周评论》"], ans: 2, tip: "1915年陈独秀在上海创办《青年杂志》（后改名《新青年》），高举\"民主\"与\"科学\"两面大旗，成为新文化运动的主要阵地。李大钊、鲁迅、胡适等人都曾在该刊发表重要文章。" }
+  ],
+  person: [
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["宋代女性", "婉约派词人代表", "对金石学有很深研究", "作品中有名句「寻寻觅觅，冷冷清清，凄凄惨惨戚戚」", "曾有改嫁行为", "有一首作品被改编为同名电视剧，反映宋代生活"], answers: ["李清照", "易安居士"], tip: "李清照（1084—约1155年），号易安居士，宋代婉约派词人代表，被誉为\"千古第一才女\"。其词前期多写悠闲生活，后期多悲叹身世，情调感伤。代表作有《声声慢》《如梦令》等。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["战国时期", "法家代表人物", "辅佐秦孝公推行变法", "变法内容包括废井田、奖军功、实行郡县制", "最终被处以车裂之刑"], answers: ["商鞅", "卫鞅", "公孙鞅"], tip: "商鞅（约公元前390—前338年），本名公孙鞅，卫国人，故称卫鞅。在秦国实行变法，使秦国国力大增，为统一六国奠定基础。秦孝公死后，被公子虔诬陷谋反，处以车裂之刑。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["唐代", "被誉为「诗仙」", "性格豪放，好酒", "曾让高力士为其脱靴", "代表作有《将进酒》《蜀道难》"], answers: ["李白", "李太白", "青莲居士"], tip: "李白（701—762年），字太白，号青莲居士，唐代浪漫主义诗人，被后人誉为\"诗仙\"。其诗风格豪放飘逸，想象丰富，语言流转自然。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["西汉时期", "著名史学家", "因替李陵辩护而遭受腐刑（宫刑）", "忍辱负重完成一部不朽史书", "被鲁迅誉为「史家之绝唱，无韵之离骚」"], answers: ["司马迁", "太史公"], tip: "司马迁（约公元前145—约前86年），字子长，西汉史学家。因替李陵辩护触怒汉武帝，被处以腐刑。出狱后完成《史记》，是中国第一部纪传体通史。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["三国时期", "蜀汉丞相", "发明木牛流马用于运输粮草", "提出「鞠躬尽瘁，死而后已」", "病逝于北伐途中的五丈原"], answers: ["诸葛亮", "孔明", "武侯"], tip: "诸葛亮（181—234年），字孔明，号卧龙。辅佐刘备建立蜀汉，刘备死后辅佐刘禅，多次北伐曹魏，最终病逝于五丈原。被后世尊为忠臣与智者的典范。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["北宋时期", "著名改革家、文学家", "主张变法，推行新法", "著有《答司马谏议书》反驳反对者", "唐宋八大家之一"], answers: ["王安石", "介甫", "半山"], tip: "王安石（1021—1086年），字介甫，号半山，北宋政治家、文学家。宋神宗时期推行变法，涉及财政、军事、教育等多个方面。唐宋八大家之一，散文说理透彻。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["南宋时期", "抗金名将", "背上刺有「尽忠报国」四字", "率领「岳家军」多次大败金军", "被秦桧以「莫须有」罪名害死于风波亭"], answers: ["岳飞", "鹏举"], tip: "岳飞（1103—1142年），字鹏举，南宋抗金名将。率领岳家军收复失地，却被宋高宗和秦桧以\"莫须有\"罪名害死。其词《满江红》千古传颂。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["明朝", "著名航海家", "七次下西洋，最远到达东非", "宦官出身，原名马和", "从刘家港出发，船队规模庞大"], answers: ["郑和", "三宝太监"], tip: "郑和（1371—1433年），本姓马，名和，回族。明成祖时期任内官监太监，七次下西洋，足迹遍布东南亚、印度洋、红海及东非海岸，是世界航海史上的壮举。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["清末民初", "著名思想家、翻译家", "翻译《天演论》引入「物竞天择」思想", "曾任北京大学校长", "主张「信、达、雅」的翻译标准"], answers: ["严复", "几道"], tip: "严复（1854—1921年），字几道，福建侯官人。清末维新派思想家，翻译《天演论》《原富》等西方著作，将进化论、自由主义等思想引入中国，对近代思想启蒙影响深远。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["近代", "被誉为「革命先行者」", "提出「民族、民权、民生」三大主义", "领导辛亥革命，推翻清朝", "建立中华民国，就任临时大总统"], answers: ["孙中山", "孙文", "逸仙"], tip: "孙中山（1866—1925年），名文，字逸仙。中国近代民主革命的伟大先行者，提出三民主义，领导辛亥革命推翻封建帝制，建立了中华民国，被尊为\"国父\"。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["唐朝", "中国历史上唯一的女皇帝", "建立武周政权，改国号为「周」", "重视科举，开创殿试和武举", "无字碑位于陕西乾陵"], answers: ["武则天", "武瞾", "武媚娘"], tip: "武则天（624—705年），名瞾，并州文水人。690年称帝，建立武周，是中国历史上唯一正式登基称帝的女性。在位期间重视人才选拔，社会经济发展。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["战国时期", "儒家代表人物", "主张「仁政」和「民贵君轻」", "被后世尊为「亚圣」", "与孔子并称「孔孟」"], answers: ["孟子", "孟轲"], tip: "孟子（约公元前372—前289年），名轲，战国时期儒家代表人物。主张\"仁政\"、\"民贵君轻\"，被尊为\"亚圣\"，其思想对后世儒家发展影响深远。代表作有《孟子》。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["秦朝", "中国历史上第一位皇帝", "统一六国，建立中央集权制度", "统一文字、货币、度量衡", "有「焚书坑儒」的争议行为"], answers: ["秦始皇", "嬴政", "赵政"], tip: "秦始皇（公元前259—前210年），名嬴政，中国历史上第一个皇帝。统一六国后建立皇帝制度，推行郡县制，统一文字货币度量衡，修筑长城，对后世影响深远。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["汉朝", "著名的外交家和探险家", "两次出使西域", "开辟了著名的丝绸之路", "汉武帝派他联合大月氏夹击匈奴"], answers: ["张骞", "博望侯"], tip: "张骞（约公元前164—前114年），汉中城固人，西汉外交家。两次出使西域，虽然军事目的未完全实现，但开辟了连接中西方的丝绸之路，被誉为\"凿空\"第一人。" },
+    { q: "根据以下线索，猜猜这位历史人物是谁？", clues: ["北宋时期", "著名文学家、词人", "豪放派词人代表", "曾任密州知州，写下「明月几时有」", "被贬黄州后写下「大江东去」", "唐宋八大家之一"], answers: ["苏轼", "苏东坡", "子瞻"], tip: "苏轼（1037—1101年），字子瞻，号东坡居士，北宋文学家、书法家、画家。其词开创豪放派，代表作有《水调歌头·明月几时有》《念奴娇·赤壁怀古》等，与父亲苏洵、弟弟苏辙并称\"三苏\"。" }
+  ]
+};
+
+const ALL_ACHIEVEMENTS = [
+  { id: "first_blood", icon: "⚡", name: "初战告捷", desc: "完成第一局游戏", pts: 50, check: (s) => s.totalGames >= 1 },
+  { id: "perfect", icon: "💎", name: "完美无缺", desc: "单局全部答对", pts: 200, check: (s) => s.lastCorrect === s.lastTotal && s.lastTotal > 0 },
+  { id: "streak3", icon: "🔥", name: "连胜三题", desc: "单局连续答对3题", pts: 100, check: (s) => s.maxStreak >= 3 },
+  { id: "streak5", icon: "🌟", name: "连胜五题", desc: "单局连续答对5题", pts: 150, check: (s) => s.maxStreak >= 5 },
+  { id: "hard_winner", icon: "⚔️", name: "史学大家", desc: "困难模式正确率达80%", pts: 300, check: (s) => s.lastDiff === "hard" && s.lastCorrect / s.lastTotal >= 0.8 },
+  { id: "person_winner", icon: "🎯", name: "识人如炬", desc: "人物模式正确率达80%", pts: 300, check: (s) => s.lastDiff === "person" && s.lastCorrect / s.lastTotal >= 0.8 },
+  { id: "score500", icon: "🏆", name: "积分达人", desc: "累计积分超过500", pts: 100, check: (s) => s.totalScore >= 500 },
+  { id: "score2000", icon: "👑", name: "史战天下", desc: "累计积分超过2000", pts: 300, check: (s) => s.totalScore >= 2000 },
+  { id: "played10", icon: "📚", name: "勤学苦练", desc: "累计答题超过50道", pts: 150, check: (s) => s.totalAnswered >= 50 },
+  { id: "all_modes", icon: "🌈", name: "遍尝百味", desc: "四种模式都至少玩过一局", pts: 200, check: (s) => {
+    const modes = s.playedModes || [];
+    return ["easy","mid","hard","person"].every(m => modes.includes(m));
+  } },
+];
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem("historyGame") || "{}"); }
+  catch { return {}; }
+}
+function saveState(s) { localStorage.setItem("historyGame", JSON.stringify(s)); }
+
+let state = {
+  totalScore: 0, totalAnswered: 0, totalGames: 0, unlockedAch: [], playedModes: [],
+  ...loadState()
+};
+
+let currentDiff = "easy";
+let questions = [];
+let currentIdx = 0;
+let score = 0;
+let correct = 0;
+let answered = 0;
+let streak = 0;
+let maxStreak = 0;
+let answered_this = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  if (id === "home") updateHomeStats();
+  if (id === "achievements") renderAchievements();
+}
+
+function updateHomeStats() {
+  document.getElementById("total-score").textContent = state.totalScore;
+  document.getElementById("total-played").textContent = state.totalAnswered;
+  document.getElementById("ach-count").textContent = state.unlockedAch.length;
+}
+
+function startGame(diff) {
+  currentDiff = diff;
+  const pool = QUESTIONS[diff];
+  questions = shuffle(pool).slice(0, 10);
+  currentIdx = 0;
+  score = 0;
+  correct = 0;
+  answered = 0;
+  streak = 0;
+  maxStreak = 0;
+
+  const tagEl = document.getElementById("diff-tag");
+  const names = { easy: "简单", mid: "中等", hard: "困难", person: "人物" };
+  tagEl.textContent = names[diff];
+  tagEl.className = "difficulty-tag tag-" + diff;
+
+  const bar = document.getElementById("progress-bar");
+  const colors = { easy: "var(--easy)", mid: "var(--mid)", hard: "var(--hard)", person: "var(--person)" };
+  bar.style.background = colors[diff];
+
+  showScreen("game");
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[currentIdx];
+  const total = questions.length;
+  answered_this = false;
+
+  document.getElementById("q-num").textContent = "第 " + (currentIdx + 1) + " 题";
+  document.getElementById("q-text").textContent = q.q;
+  document.getElementById("q-count").textContent = (currentIdx + 1) + "/" + total;
+  document.getElementById("progress-bar").style.width = (currentIdx / total * 100) + "%";
+  document.getElementById("live-score").textContent = score + " 分";
+  document.getElementById("feedback-box").classList.remove("show");
+  document.getElementById("next-btn").classList.remove("show");
+
+  const clueList = document.getElementById("clue-list");
+  const opts = document.getElementById("options");
+  const inputWrap = document.getElementById("answer-input-wrap");
+  const input = document.getElementById("answer-input");
+  const submitBtn = document.getElementById("submit-btn");
+
+  clueList.innerHTML = "";
+  opts.innerHTML = "";
+  input.value = "";
+  input.disabled = false;
+  submitBtn.disabled = false;
+
+  if (currentDiff === "person") {
+    inputWrap.style.display = "flex";
+    opts.style.display = "none";
+    if (q.clues) {
+      q.clues.forEach((clue, i) => {
+        const div = document.createElement("div");
+        div.className = "clue-item";
+        div.innerHTML = `<span class="clue-label">线索 ${i + 1}：</span>${clue}`;
+        clueList.appendChild(div);
+      });
+    }
+  } else {
+    inputWrap.style.display = "none";
+    opts.style.display = "flex";
+    const labels = ["A", "B", "C", "D"];
+    q.opts.forEach((opt, i) => {
+      const btn = document.createElement("button");
+      btn.className = "opt-btn";
+      btn.innerHTML = `<span class="opt-label">${labels[i]}.</span>${opt}`;
+      btn.onclick = () => selectAnswer(i, q.ans, q.tip);
+      opts.appendChild(btn);
+    });
+  }
+
+  const card = document.getElementById("question-card");
+  card.classList.remove("animate-in");
+  void card.offsetWidth;
+  card.classList.add("animate-in");
+}
+
+function selectAnswer(chosen, correct_idx, tip) {
+  if (answered_this) return;
+  answered_this = true;
+
+  const btns = document.querySelectorAll(".opt-btn");
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === correct_idx) b.classList.add(chosen === correct_idx ? "correct" : "reveal");
+  });
+  if (chosen !== correct_idx) btns[chosen].classList.add("wrong");
+
+  const isCorrect = chosen === correct_idx;
+  processAnswer(isCorrect, tip);
+}
+
+function submitPersonAnswer() {
+  if (answered_this) return;
+  const q = questions[currentIdx];
+  const input = document.getElementById("answer-input");
+  const submitBtn = document.getElementById("submit-btn");
+  const val = input.value.trim();
+  if (!val) return;
+
+  answered_this = true;
+  input.disabled = true;
+  submitBtn.disabled = true;
+
+  const normalized = val.toLowerCase().replace(/\s+/g, "");
+  const isCorrect = q.answers.some(a => a.toLowerCase().replace(/\s+/g, "") === normalized);
+  processAnswer(isCorrect, q.tip);
+}
+
+function processAnswer(isCorrect, tip) {
+  answered++;
+  if (isCorrect) {
+    correct++;
+    streak++;
+    if (streak > maxStreak) maxStreak = streak;
+    const pts = calcPoints();
+    score += pts;
+    document.getElementById("feedback-title").textContent = "✓ 回答正确！+" + pts + " 分";
+  } else {
+    streak = 0;
+    document.getElementById("feedback-title").textContent = "✗ 回答错误";
+  }
+  document.getElementById("feedback-body").textContent = tip;
+
+  const fb = document.getElementById("feedback-box");
+  fb.classList.add("show");
+  document.getElementById("next-btn").classList.add("show");
+  document.getElementById("next-btn").textContent =
+    currentIdx + 1 >= questions.length ? "查看结果 →" : "下一题 →";
+
+  document.getElementById("live-score").textContent = score + " 分";
+  document.getElementById("live-score").classList.add("pop");
+  setTimeout(() => document.getElementById("live-score").classList.remove("pop"), 200);
+}
+
+function calcPoints() {
+  const base = { easy: 10, mid: 20, hard: 35, person: 25 }[currentDiff];
+  const bonus = streak >= 3 ? Math.floor(base * 0.5) : 0;
+  return base + bonus;
+}
+
+function nextQuestion() {
+  currentIdx++;
+  if (currentIdx >= questions.length) {
+    endGame();
+  } else {
+    renderQuestion();
+  }
+}
+
+function endGame() {
+  const total = questions.length;
+  const acc = Math.round(correct / total * 100);
+
+  state.totalAnswered += answered;
+  state.totalScore += score;
+  state.totalGames++;
+  state.lastCorrect = correct;
+  state.lastTotal = total;
+  state.lastDiff = currentDiff;
+  state.maxStreak = maxStreak;
+  if (!state.playedModes) state.playedModes = [];
+  if (!state.playedModes.includes(currentDiff)) state.playedModes.push(currentDiff);
+
+  const newAch = checkAchievements();
+  saveState(state);
+
+  document.getElementById("result-icon").textContent =
+    acc >= 90 ? "🏆" : acc >= 70 ? "🎉" : acc >= 50 ? "📖" : "💪";
+  document.getElementById("result-title").textContent =
+    acc >= 90 ? "历史大家！" : acc >= 70 ? "挑战完成！" : acc >= 50 ? "继续加油！" : "再接再厉！";
+  document.getElementById("result-sub").textContent =
+    `本局答对 ${correct}/${total} 题，正确率 ${acc}%`;
+
+  document.getElementById("res-correct").textContent = correct;
+  document.getElementById("res-wrong").textContent = total - correct;
+  document.getElementById("res-pts").textContent = score;
+  document.getElementById("res-acc").textContent = acc + "%";
+
+  const names = { easy: "简单", mid: "中等", hard: "困难", person: "人物" };
+  document.getElementById("replay-btn").textContent =
+    "再战一局（" + names[currentDiff] + "）";
+
+  const newAchWrap = document.getElementById("new-achievements");
+  if (newAch.length > 0) {
+    newAchWrap.style.display = "block";
+    const list = document.getElementById("new-ach-list");
+    list.innerHTML = "";
+    newAch.forEach(a => {
+      list.innerHTML += `
+        <div class="ach-item">
+          <span class="ach-icon">${a.icon}</span>
+          <div>
+            <div class="ach-name">${a.name}</div>
+            <div class="ach-desc">${a.desc} · +${a.pts}分</div>
+          </div>
+        </div>`;
+    });
+  } else {
+    newAchWrap.style.display = "none";
+  }
+
+  showScreen("result");
+}
+
+function checkAchievements() {
+  const newly = [];
+  ALL_ACHIEVEMENTS.forEach(a => {
+    if (!state.unlockedAch.includes(a.id) && a.check(state)) {
+      state.unlockedAch.push(a.id);
+      state.totalScore += a.pts;
+      newly.push(a);
+    }
+  });
+  return newly;
+}
+
+function replayGame() {
+  startGame(currentDiff);
+}
+
+function confirmBack() {
+  if (confirm("确定要退出本局游戏吗？当前进度将不会保存。")) {
+    showScreen("home");
+  }
+}
+
+function renderAchievements() {
+  const body = document.getElementById("ach-page-body");
+  body.innerHTML = `<div style="font-size:13px;color:var(--muted);margin-bottom:4px;">已解锁 ${state.unlockedAch.length} / ${ALL_ACHIEVEMENTS.length} 个成就</div>`;
+  ALL_ACHIEVEMENTS.forEach(a => {
+    const unlocked = state.unlockedAch.includes(a.id);
+    body.innerHTML += `
+      <div class="ach-card ${unlocked ? "" : "locked"}">
+        <div class="ach-card-icon">${unlocked ? a.icon : "🔒"}</div>
+        <div class="ach-card-info">
+          <div class="ach-card-name">${a.name}</div>
+          <div class="ach-card-desc">${a.desc}</div>
+          <div class="ach-card-pts">+${a.pts} 积分奖励</div>
+        </div>
+      </div>`;
+  });
+}
+
+updateHomeStats();
+</script>
 </body>
 </html>
